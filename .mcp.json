@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "atlassian": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.atlassian.com/v1/sse"],
+      "env": {
+        "JIRA_DEFAULT_PROJECT": "WEAT",
+        "JIRA_CLOUD_ID": "de101c1b-5660-44b9-8874-e731ec731870"
+      }
+    }
+  },
+  "jira": {
+    "defaultProject": "WEAT",
+    "projectName": "Weatherly",
+    "cloudId": "de101c1b-5660-44b9-8874-e731ec731870"
+  }
+}
