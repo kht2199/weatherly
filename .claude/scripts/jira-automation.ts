@@ -4,7 +4,7 @@
  * Agent와 Jira 간 자동화를 위한 유틸리티 함수 모음
  */
 
-import { AgentMessage, AgentType } from './types';
+import { AgentMessage, AgentType, AGENT_METADATA } from './types';
 
 // ============================================
 // Configuration
@@ -49,24 +49,37 @@ export async function createJiraIssue(params: {
   // Agent 이름을 Jira assignee로 매핑
   const assigneeAccountId = await getAgentJiraAccountId(assignee);
 
+  // Agent 레이블 자동 추가
+  const issueLabels = labels || [];
+  if (assignee) {
+    issueLabels.push(getAgentLabel(assignee));
+  }
+
+  // Agent 정보를 description에 포함
+  let enhancedDescription = description || '';
+  if (assignee) {
+    const agentHeader = formatAgentHeader(assignee);
+    enhancedDescription = `${agentHeader}\n\n---\n\n${enhancedDescription}`;
+  }
+
   const issueData = {
     fields: {
       project: { key: config.projectKey },
       issuetype: { name: issueType },
       summary,
-      description: description ? {
+      description: enhancedDescription ? {
         type: 'doc',
         version: 1,
         content: [
           {
             type: 'paragraph',
-            content: [{ type: 'text', text: description }]
+            content: [{ type: 'text', text: enhancedDescription }]
           }
         ]
       } : undefined,
       assignee: assigneeAccountId ? { accountId: assigneeAccountId } : undefined,
       priority: priority ? { name: priority } : undefined,
-      labels: labels || [],
+      labels: issueLabels,
       parent: parent ? { key: parent } : undefined,
       duedate: dueDate,
       ...customFields,
@@ -76,7 +89,7 @@ export async function createJiraIssue(params: {
   // MCP를 사용하여 Jira 이슈 생성
   const response = await createJiraIssueMCP(issueData);
 
-  console.log(`✅ Jira 이슈 생성됨: ${response.key}`);
+  console.log(`✅ Jira 이슈 생성됨: ${response.key}${assignee ? ` (${formatAgentHeader(assignee)})` : ''}`);
 
   return {
     issueKey: response.key,
@@ -208,7 +221,8 @@ export async function onAgentTaskStart(
   agent: AgentType,
   issueKey: string
 ): Promise<void> {
-  console.log(`🚀 ${agent} Agent 작업 시작: ${issueKey}`);
+  const agentHeader = formatAgentHeader(agent);
+  console.log(`🚀 ${agentHeader} 작업 시작: ${issueKey}`);
 
   // 1. 상태를 In Progress로 변경
   await transitionJiraIssue(issueKey, 'In Progress');
@@ -221,14 +235,21 @@ export async function onAgentTaskStart(
     });
   }
 
-  // 3. 작업 시작 코멘트 추가
+  // 3. Agent 레이블 추가
+  const agentLabel = getAgentLabel(agent);
+  await updateJiraIssueMCP(issueKey, {
+    labels: [agentLabel]
+  });
+
+  // 4. 작업 시작 코멘트 추가
+  const startTime = new Date().toISOString();
   await addJiraComment(
     issueKey,
-    `🤖 ${agent} Agent가 작업을 시작했습니다.\n시작 시간: ${new Date().toISOString()}`
+    `## ${agentHeader}\n\n⏱️ **작업 시작**\n\n**시작 시간:** ${startTime}\n**상태:** In Progress`
   );
 
-  // 4. 작업 시간 로깅 시작
-  await logWorkTime(issueKey, '0h', '작업 시작');
+  // 5. 작업 시간 로깅 시작
+  await logWorkTime(issueKey, '0h', `${agentHeader} 작업 시작`);
 }
 
 /**
@@ -240,13 +261,15 @@ export async function onAgentTaskComplete(
   summary: string,
   artifacts?: Array<{ type: string; url: string }>
 ): Promise<void> {
-  console.log(`✅ ${agent} Agent 작업 완료: ${issueKey}`);
+  const agentHeader = formatAgentHeader(agent);
+  console.log(`✅ ${agentHeader} 작업 완료: ${issueKey}`);
 
   // 1. 완료 코멘트 추가
-  let comment = `## ✅ 작업 완료\n\n**Agent:** ${agent}\n**완료 시간:** ${new Date().toISOString()}\n\n### Summary\n${summary}`;
+  const completionTime = new Date().toISOString();
+  let comment = `## ${agentHeader}\n\n✅ **작업 완료**\n\n**완료 시간:** ${completionTime}\n\n### 작업 요약\n${summary}`;
 
   if (artifacts && artifacts.length > 0) {
-    comment += '\n\n### Artifacts\n';
+    comment += '\n\n### 산출물 (Artifacts)\n';
     artifacts.forEach(artifact => {
       comment += `- [${artifact.type}](${artifact.url})\n`;
     });
@@ -435,10 +458,13 @@ export async function logAgentMessageToJira(message: AgentMessage): Promise<void
  * Agent 메시지를 Jira 코멘트 형식으로 변환
  */
 function formatAgentMessageForJira(message: AgentMessage): string {
-  const toAgents = Array.isArray(message.to) ? message.to.join(', ') : message.to;
+  const fromAgent = formatAgentHeader(message.from);
+  const toAgents = Array.isArray(message.to)
+    ? message.to.map(a => formatAgentHeader(a)).join(', ')
+    : formatAgentHeader(message.to);
 
   let comment = `## 📨 Agent Communication\n\n`;
-  comment += `**From:** ${message.from}\n`;
+  comment += `**From:** ${fromAgent}\n`;
   comment += `**To:** ${toAgents}\n`;
   comment += `**Type:** ${message.type}\n`;
   comment += `**Priority:** ${message.priority}\n`;
@@ -454,12 +480,43 @@ function formatAgentMessageForJira(message: AgentMessage): string {
 // ============================================
 
 /**
+ * Agent 정보를 포함한 헤더 생성
+ */
+function formatAgentHeader(agent: AgentType): string {
+  const metadata = AGENT_METADATA[agent];
+  return `${metadata.emoji} **${metadata.name} Agent** (${metadata.role})`;
+}
+
+/**
+ * Agent 정보를 Jira 레이블로 변환
+ */
+function getAgentLabel(agent: AgentType): string {
+  return AGENT_METADATA[agent].jiraLabel;
+}
+
+/**
+ * 모든 Agent 레이블 반환 (이슈 생성 시 자동 추가용)
+ */
+function getAllAgentLabels(): string[] {
+  return Object.values(AGENT_METADATA).map(meta => meta.jiraLabel);
+}
+
+/**
  * Agent 이름을 Jira account ID로 매핑
+ *
+ * 단일 Bot 계정 사용 시: 모든 Agent가 동일한 Bot 계정 ID 반환
+ * Agent별 계정 사용 시: 각 Agent의 고유 계정 ID 반환
  */
 async function getAgentJiraAccountId(agent?: AgentType): Promise<string | null> {
   if (!agent) return null;
 
-  // 실제 구현에서는 Agent별 Jira 계정 매핑 테이블 사용
+  // Option 1: 단일 Bot 계정 사용 (권장)
+  const botAccountId = process.env.JIRA_BOT_ACCOUNT_ID;
+  if (botAccountId) {
+    return botAccountId;
+  }
+
+  // Option 2: Agent별 개별 계정 사용
   const agentAccountMap: Record<AgentType, string> = {
     coordinator: process.env.JIRA_COORDINATOR_ACCOUNT_ID || '',
     frontend: process.env.JIRA_FRONTEND_ACCOUNT_ID || '',
