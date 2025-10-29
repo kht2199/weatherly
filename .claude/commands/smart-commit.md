@@ -18,13 +18,35 @@ You are a Git commit automation agent. Your job is to analyze code changes and c
      - Related files (files that change together for the same purpose)
    - Create a logical commit plan
 
-2. **Present commit plan to user**
+2. **Decide branching strategy**
+   - If changes represent a **single cohesive feature** with multiple related commits:
+     - Create a feature branch
+     - Make commits on that branch
+     - Merge back to main with `--no-ff` (non-fast-forward merge)
+   - If changes are **independent/unrelated**:
+     - Commit directly to current branch
+   - **Criteria for feature branch:**
+     - 3+ commits that are part of the same feature/task
+     - All commits share the same prefix (feat:, fix:, test:, etc.)
+     - Changes represent a complete unit of work
+
+3. **Present commit plan to user**
    - Show grouped changes
+   - Indicate if a feature branch will be created
+   - Suggest branch name (e.g., `feature/agent-identification`)
    - Suggest commit messages following project conventions
    - Ask for user confirmation or modifications
 
-3. **Execute commits**
-   - For each commit group:
+4. **Execute commits**
+   - **If using feature branch:**
+     - Get current branch name: `git rev-parse --abbrev-ref HEAD`
+     - Create and checkout feature branch: `git checkout -b feature/name`
+     - Make all commits on feature branch
+     - Switch back to original branch: `git checkout <original-branch>`
+     - Merge with no-ff: `git merge --no-ff feature/name -m "merge message"`
+     - Delete feature branch: `git branch -d feature/name`
+
+   - **For each commit:**
      - Stage only the relevant files using `git add <files>`
      - Create commit with appropriate message following the format:
        ```
@@ -39,7 +61,7 @@ You are a Git commit automation agent. Your job is to analyze code changes and c
        ```
      - Verify commit success with `git status`
 
-4. **Optional: Link to Jira**
+5. **Optional: Link to Jira**
    - If commit relates to a Jira issue, suggest adding issue key to commit message
    - Format: `<type>: <description> (WEAT-123)`
    - Can also add comment to related Jira issue about the commit
@@ -66,18 +88,98 @@ Follow the project's commit convention (based on recent commits):
 - Ask for confirmation before committing if unsure
 - Keep commits atomic and focused
 
+## Branching Rules
+
+**When to create a feature branch:**
+- 3 or more commits that are logically related
+- All commits implement the same feature/fix/refactor
+- Commits share the same type prefix (all feat:, all fix:, etc.)
+- Changes represent a complete, cohesive unit of work
+- Example: Adding a complete feature with implementation + tests + docs
+
+**When to commit directly:**
+- 1-2 unrelated commits
+- Quick fixes or independent changes
+- Different types (feat + docs + fix mixed together)
+- Changes that don't form a cohesive feature
+
+**Feature branch naming:**
+- `feature/<feature-name>` for new features (feat: commits)
+- `fix/<issue-name>` for bug fixes (fix: commits)
+- `refactor/<area-name>` for refactoring (refactor: commits)
+- `test/<feature-name>` for test additions (test: commits)
+- Use kebab-case for names (e.g., `feature/agent-identification`)
+
+**Merge message format:**
+```
+Merge <branch-name>
+
+<Brief summary of what the branch accomplished>
+<List key changes or features added>
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
 ## Example Grouping
+
+### Example 1: Feature Branch (Related commits)
 
 If changes include:
 - `src/api/weather.ts` (new API integration)
 - `src/components/Weather.tsx` (UI for weather)
 - `src/utils/format.ts` (helper function)
-- `docs/api.md` (API documentation)
+- `tests/weather.test.ts` (tests for weather feature)
 
-Suggested commits:
-1. `feat: add weather API integration` (weather.ts, format.ts)
-2. `feat: add weather display component` (Weather.tsx)
-3. `docs: add weather API documentation` (api.md)
+**Strategy:** Create feature branch (3 related commits for weather feature)
+
+```bash
+# Create feature branch
+git checkout -b feature/weather-integration
+
+# Commit 1
+git add src/api/weather.ts src/utils/format.ts
+git commit -m "feat: add weather API integration"
+
+# Commit 2
+git add src/components/Weather.tsx
+git commit -m "feat: add weather display component"
+
+# Commit 3
+git add tests/weather.test.ts
+git commit -m "test: add weather feature tests"
+
+# Merge back to main
+git checkout main
+git merge --no-ff feature/weather-integration -m "Merge feature/weather-integration
+
+Complete weather feature implementation with API, UI, and tests"
+
+# Clean up
+git branch -d feature/weather-integration
+```
+
+### Example 2: Direct commits (Unrelated changes)
+
+If changes include:
+- `src/api/weather.ts` (weather API)
+- `docs/readme.md` (documentation update)
+- `package.json` (dependency update)
+
+**Strategy:** Commit directly (unrelated changes)
+
+```bash
+# Each commit on current branch
+git add src/api/weather.ts
+git commit -m "feat: add weather API"
+
+git add docs/readme.md
+git commit -m "docs: update readme"
+
+git add package.json
+git commit -m "lib: update dependencies"
+```
 
 ## Handling No Changes
 
