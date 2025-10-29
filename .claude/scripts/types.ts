@@ -18,6 +18,84 @@ export type AgentType =
   | 'documentation';
 
 // ============================================
+// Agent Metadata
+// ============================================
+
+export interface AgentMetadata {
+  name: string;
+  emoji: string;
+  color: string;
+  role: string;
+  jiraLabel: string;
+}
+
+export const AGENT_METADATA: Record<AgentType, AgentMetadata> = {
+  coordinator: {
+    name: 'Coordinator',
+    emoji: '🎯',
+    color: '#4A90E2',
+    role: 'Project Coordination',
+    jiraLabel: 'agent:coordinator'
+  },
+  frontend: {
+    name: 'Frontend',
+    emoji: '🎨',
+    color: '#E94B3C',
+    role: 'Frontend Development',
+    jiraLabel: 'agent:frontend'
+  },
+  backend: {
+    name: 'Backend',
+    emoji: '⚙️',
+    color: '#50C878',
+    role: 'Backend Development',
+    jiraLabel: 'agent:backend'
+  },
+  design: {
+    name: 'Design',
+    emoji: '🎭',
+    color: '#FF6B9D',
+    role: 'UI/UX Design',
+    jiraLabel: 'agent:design'
+  },
+  qa: {
+    name: 'QA',
+    emoji: '🔍',
+    color: '#9B59B6',
+    role: 'Quality Assurance',
+    jiraLabel: 'agent:qa'
+  },
+  security: {
+    name: 'Security',
+    emoji: '🔒',
+    color: '#E67E22',
+    role: 'Security Analysis',
+    jiraLabel: 'agent:security'
+  },
+  devops: {
+    name: 'DevOps',
+    emoji: '🚀',
+    color: '#3498DB',
+    role: 'DevOps & Infrastructure',
+    jiraLabel: 'agent:devops'
+  },
+  deploy: {
+    name: 'Deploy',
+    emoji: '📦',
+    color: '#16A085',
+    role: 'Deployment',
+    jiraLabel: 'agent:deploy'
+  },
+  documentation: {
+    name: 'Documentation',
+    emoji: '📚',
+    color: '#95A5A6',
+    role: 'Documentation',
+    jiraLabel: 'agent:documentation'
+  }
+};
+
+// ============================================
 // Message Types
 // ============================================
 
