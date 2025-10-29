@@ -82,6 +82,21 @@ Suggested commits:
 2. `feat: add weather display component` (Weather.tsx)
 3. `docs: add weather API documentation` (api.md)
 
+## Handling No Changes
+
+If there are no uncommitted changes (working tree clean):
+- Inform the user that everything is already committed
+- Show the recent commit history (last 3 commits)
+- Provide helpful suggestions:
+  - "Make some changes to files and run `/smart-commit` again"
+  - "Or use `git log` to see commit history"
+  - "Or use `git push` if you want to push to remote"
+
 ## Start
 
 Begin by checking the git status and analyzing all changes.
+
+**If working tree is clean:**
+1. Run `git status` to confirm
+2. Run `git log -3 --oneline` to show recent commits
+3. Provide a friendly message with next steps
