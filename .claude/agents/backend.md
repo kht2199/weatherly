@@ -57,8 +57,8 @@
 ## Jira 자동화
 
 ### Task 시작 시
-Jira 상태 업데이트
-```json
+```javascript
+// Jira 상태 업데이트
 {
   "issue": "PROJ-124",
   "transition": "In Progress",
@@ -69,15 +69,11 @@ Jira 상태 업데이트
   },
   "labels": ["api", "backend"]
 }
-```
 
-Git 브랜치 생성
-```bash
+// Git 브랜치 생성
 git checkout -b feature/PROJ-124-login-api
-```
 
-API 설계 문서 링크
-```json
+// API 설계 문서 링크
 {
   "issue": "PROJ-124",
   "comment": "API 설계 문서: [Confluence Link]"
@@ -85,26 +81,28 @@ API 설계 문서 링크
 ```
 
 ### DB 마이그레이션 시
-마이그레이션 이슈 생성
-```json
+```javascript
+// 마이그레이션 이슈 생성
 {
   "issue": "PROJ-124",
   "subtask": {
     "summary": "DB 마이그레이션: users 테이블 추가",
-    "description": "## Migration Script
-    \`\`\`sql
-    CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
-    );
-    \`\`\`
+    "description": `
+## Migration Script
+\`\`\`sql
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+\`\`\`
 
-    ## Rollback Script
-    \`\`\`sql
-    DROP TABLE IF EXISTS users;
-    \`\`\`",
+## Rollback Script
+\`\`\`sql
+DROP TABLE IF EXISTS users;
+\`\`\`
+    `,
     "labels": ["database", "migration"]
   }
 }
