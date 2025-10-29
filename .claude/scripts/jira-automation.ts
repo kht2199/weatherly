@@ -529,23 +529,5 @@ async function addRemoteLinkMCP(issueKey: string, linkData: any): Promise<void> 
 }
 
 // ============================================
-// Exports
+// Note: All functions are already exported inline above
 // ============================================
-
-export {
-  createJiraIssue,
-  transitionJiraIssue,
-  addJiraComment,
-  logWorkTime,
-  linkJiraIssues,
-  createJiraVersion,
-  setFixVersion,
-  onAgentTaskStart,
-  onAgentTaskComplete,
-  onPRCreated,
-  onPRMerged,
-  onDeploymentComplete,
-  onBugFound,
-  onSecurityVulnerabilityFound,
-  logAgentMessageToJira,
-};

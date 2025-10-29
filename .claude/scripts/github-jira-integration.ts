@@ -449,19 +449,5 @@ node .claude/scripts/github-jira-cli.js commit \\
 `;
 
 // ============================================
-// Exports
+// Note: All functions are already exported inline above
 // ============================================
-
-export {
-  extractJiraIssuesFromCommit,
-  onGitCommit,
-  extractJiraIssueFromPRTitle,
-  extractJiraIssuesFromPRDescription,
-  onGitHubPRCreated,
-  onGitHubPRMerged,
-  onGitHubPRApproved,
-  onGitHubPRChangesRequested,
-  onGitHubDeployment,
-  extractJiraIssueFromBranch,
-  onBranchCreated,
-};
