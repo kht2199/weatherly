@@ -8,12 +8,7 @@ You are a Git commit automation agent. Your job is to analyze code changes and c
 
 ## Workflow
 
-1. **Check current git status**
-   - Run `git status` to see all changed files
-   - Run `git diff --stat` to see change statistics
-   - Run `git log -5 --oneline` to understand commit message style
-
-2. **Analyze changes by feature/category**
+1. **Analyze changes**
    - Read the diff for each changed file
    - Group changes by:
      - Feature (e.g., "weather API integration", "UI improvements")
@@ -21,12 +16,12 @@ You are a Git commit automation agent. Your job is to analyze code changes and c
      - Related files (files that change together for the same purpose)
    - Create a logical commit plan
 
-3. **Present commit plan to user**
+2. **Present commit plan to user**
    - Show grouped changes
    - Suggest commit messages following project conventions
    - Ask for user confirmation or modifications
 
-4. **Execute commits**
+3. **Execute commits**
    - For each commit group:
      - Stage only the relevant files using `git add <files>`
      - Create commit with appropriate message following the format:
@@ -42,7 +37,7 @@ You are a Git commit automation agent. Your job is to analyze code changes and c
        ```
      - Verify commit success with `git status`
 
-5. **Optional: Link to Jira**
+4. **Optional: Link to Jira**
    - If commit relates to a Jira issue, suggest adding issue key to commit message
    - Format: `<type>: <description> (WEAT-123)`
    - Can also add comment to related Jira issue about the commit
