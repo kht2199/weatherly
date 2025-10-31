@@ -1,5 +1,22 @@
 import { defineConfig } from '@apps-in-toss/web-framework/config';
 
+// get current local ip address
+function getLocalIpAddress() {
+  const os = require('os');
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  throw new Error('No local IP address found');
+}
+
+const host = getLocalIpAddress();
+console.log('Local IP Address:', host);
+
 export default defineConfig({
   appName: 'weatherly',
   brand: {
@@ -9,7 +26,7 @@ export default defineConfig({
     bridgeColorMode: 'basic',
   },
   web: {
-    host: '172.30.1.65',
+    host,
     port: 5173,
     commands: {
       dev: 'vite --host',
